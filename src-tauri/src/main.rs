@@ -16,6 +16,8 @@ struct Payload {
 fn greet(window: Window) {
   let ports = SerialPort::available_ports().unwrap();
 
+  // test
+
   for port in ports.iter() {
     if let SerialPortType::UsbPort(a) = port.port_type.clone() {
         println!("line: {:?}", a); // Prints 1
