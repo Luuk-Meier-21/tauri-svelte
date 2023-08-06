@@ -1,10 +1,19 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/tauri";
-  import { listen } from "@tauri-apps/api/event";
+  import {invoke} from "@tauri-apps/api/tauri";
+  import {listen} from "@tauri-apps/api/event";
 
-  const func = () => {
-    console.log("hi");
-    invoke("greet");
+  $: portName = null;
+
+  const connect = () => {
+    invoke("connect").then((response) => {
+      portName = response;
+    });
+  };
+
+  const listenSerial = () => {
+    invoke("listen").then((a) => {
+      console.log(a);
+    });
   };
 
   listen("event-name", (event) => {
@@ -16,5 +25,11 @@
 </script>
 
 <main class="">
-  <button on:click={func} class="p-2 bg-white/10"> Run </button>
+  {#if portName}
+    <span>{portName}</span>
+  {:else}
+    <span>No port found</span>
+  {/if}
+  <button on:click={connect} class="p-2 bg-white/10">Run</button>
+  <button on:click={listenSerial} class="p-2 bg-white/10">Listen</button>
 </main>

@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "tauri": "tauri",
+    "cargo": "cd src-tauri && cargo",
     "flush-tauri": "rmdir ./src-tauri/target"
   },
   "devDependencies": {
