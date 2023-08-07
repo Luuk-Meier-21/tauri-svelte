@@ -1,4 +1,5 @@
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
+use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
 use std::thread;
@@ -18,7 +19,7 @@ pub struct Arduino {
 
 pub struct Test {}
 
-pub struct ArduinoState(pub Arc<Mutex<Arduino>>);
+// pub struct ArduinoState(pub Arc<Mutex<Arduino>>);
 
 impl Arduino {
     // pub fn expect_port(&mut self) -> Result<&TTYPort, ArduinoStatus> {
@@ -45,9 +46,9 @@ impl Arduino {
         self.port.is_some()
     }
 
-    pub fn set_port(&mut self, value: TTYPort) -> &TTYPort {
+    pub fn set_port(&mut self, value: TTYPort) -> &mut TTYPort {
         self.port = Some(value);
-        return self.port.as_ref().unwrap();
+        return self.port.as_mut().unwrap();
     }
 
     pub fn port_name(&mut self) -> Option<String> {
@@ -108,21 +109,20 @@ pub fn connect() -> Result<(TTYPort, String), ArduinoStatus> {
     return Ok((port, port_info.port_name));
 }
 
-// pub fn listen() {
-//     let mut line = String::new();
-//     let delay = Duration::from_millis(100);
+pub fn listen_detached<F: std::marker::Send + Fn(&String) -> () + 'static>(
+    port: TTYPort,
+    on_line: F,
+) {
+    thread::spawn(move || {
+        // let m = Arc::<TTYPort>::into_inner(port).unwrap();
 
-//     thread::spawn(move || loop {
-//         println!("Suspending...");
-//         match rx.recv() {
-//             Ok(_) => {
-//                 let len = port.read_to_string(&mut line);
-//                 thread::sleep(Duration::from_millis(delay));
-//             }
-//             Err(_) => {
-//                 println!("Terminating.");
-//                 break;
-//             }
-//         }
-//     });
-// }
+        let reader = BufReader::new(port);
+        let mut line = String::new();
+        for line in reader.lines() {
+            if line.is_ok() {
+                let data = line.unwrap_or("Reading failed".into());
+                on_line(&data);
+            }
+        }
+    });
+}

@@ -4,8 +4,8 @@
 
   $: portName = null;
 
-  const connect = () => {
-    invoke("connect").then((response) => {
+  const start = () => {
+    invoke("start").then((response) => {
       portName = response;
     });
   };
@@ -16,8 +16,7 @@
     });
   };
 
-  listen("event-name", (event) => {
-    console.log("Front-end event");
+  listen("serial-log", (event) => {
     console.log(event);
     // event.event is the event name (useful if you want to use a single callback fn for multiple event types)
     // event.payload is the payload object
@@ -30,6 +29,6 @@
   {:else}
     <span>No port found</span>
   {/if}
-  <button on:click={connect} class="p-2 bg-white/10">Run</button>
+  <button on:click={start} class="p-2 bg-white/10">Start</button>
   <button on:click={listenSerial} class="p-2 bg-white/10">Listen</button>
 </main>
