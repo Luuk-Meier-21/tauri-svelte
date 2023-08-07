@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use serialport::TTYPort;
-use tauri::State;
+use tauri::{Manager, State};
 
 use std::{
     io::{BufRead, BufReader, Read},
@@ -20,12 +20,23 @@ fn start(
     app_handle: tauri::AppHandle,
     state: State<Arc<Mutex<SharedState>>>,
 ) -> Result<String, ArduinoStatus> {
-    let mut guard = state.lock().unwrap();
-    let port = &mut guard.port;
+    let thread_shared_state = state.inner().clone();
 
-    // let state_2 = Arc::clone(port);
+    let handle = thread::spawn(move || {
+        let mut shared_data = thread_shared_state.lock().unwrap();
+        let mut port_inner = &mut shared_data.port;
 
-    Ok(format!("HI"))
+        let reader = BufReader::new(&mut port_inner);
+        for line in reader.lines() {
+            if line.is_ok() {
+                let data = line.unwrap_or("Reading failed".into());
+                // print!("{}", data)
+                // on_line(&data);
+                app_handle.emit_all("serial-log", "Line");
+            }
+        }
+    });
+    Ok(String::from("ok"))
 }
 
 // init a background process on the command, and emit periodic events only to the window that used the command
@@ -85,27 +96,16 @@ impl SharedState {
 fn main() {
     let (mut port, port_name) = arduino::connect().expect("Connection error");
     let mut shared_state = Arc::new(Mutex::new(SharedState::new(port)));
-    let mut a = Arc::clone(&mut shared_state);
-
-    let handle = thread::spawn(move || {
-        let a = Arc::clone(&mut shared_state);
-        let b = a.lock().unwrap();
-        b.port.exclusive();
-    });
-
-    // shared_state.lock().unwrap().handles.push(handle);
 
     tauri::Builder::default()
-        // .invoke_handler(tauri::generate_handler![init])
-        .manage(a)
+        .setup(|app| Ok(()))
+        .manage(shared_state)
         .invoke_handler(tauri::generate_handler![
             start,
             // etc...
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-
-    handle.join();
 }
 
 // .setup(|app| {
