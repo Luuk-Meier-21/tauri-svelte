@@ -4,14 +4,14 @@
 
   $: portName = null;
 
-  const start = () => {
-    invoke("start").then((response) => {
-      portName = response;
+  const listenSerial = () => {
+    invoke("listen").then((a) => {
+      console.log(a);
     });
   };
 
-  const listenSerial = () => {
-    invoke("listen").then((a) => {
+  const send = () => {
+    invoke("send").then((a) => {
       console.log(a);
     });
   };
@@ -29,6 +29,6 @@
   {:else}
     <span>No port found</span>
   {/if}
-  <button on:click={start} class="p-2 bg-white/10">Start</button>
   <button on:click={listenSerial} class="p-2 bg-white/10">Listen</button>
+  <button on:click={send} class="p-2 bg-white/10">Send</button>
 </main>

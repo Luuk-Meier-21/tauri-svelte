@@ -22,6 +22,8 @@ serialport = "4.2.1"
 hidapi = "2.4.1"
 serial2 = "0.2.2"
 crossbeam = "0.8.2"
+tokio-serial = "5.4.4"
+tokio = { version = "1.29.1", features = ["full"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
